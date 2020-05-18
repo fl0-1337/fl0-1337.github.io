@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Install KISS-Linux</title>
+<style>
+body{
+	color:#D8DEE9;
+	background-color:#4C566A;
+	text-align:center;
+	overflow-y:scroll}
+code {
+	color: #BF616A;
+	/*background-color: #2E3440;*/
+	background-color: #434C5E;
+}
+pre pre{text-align:left;display:inline-block}
+</style>
+</head>
+<body>
+
+	<pre>
+<h2>Install Guide for KISS-Linux
+----------------------------</h2>
+* This offical guide can be found on k1ss.org/install
+	</pre>
+
+	<pre>
+<h3>===========================
+DOWNLOAD THE LATEST RELEASE
+===========================</h3>
++--------------------------------------------------------------------+
+|                                                                    |
+|    <code>$ url=github.com/kisslinux/repo/releases/download/1.10.0</code>        |
+|    <code>$ wget "$url/kiss-chroot.tar.xz"</code>                                |
+|                                                                    |
++--------------------------------------------------------------------+
+
+
+<h3>==================================
+VERIFY THE CHECKSUMS (recommended)
+==================================</h3>
++--------------------------------------------------------------------+
+|                                                                    |
+|    <code>$ wget "$url/kiss-chroot.tar.xz.sha256"</code>                         |
+|    <code>$ sha256sum -c < kiss-chroot.tar.xz.sha256</code>                      |
+|                                                                    |
++--------------------------------------------------------------------+
+
+
+<h3>==================================
+VERIFY THE SIGNATURE (recommended)
+==================================</h3>
++--------------------------------------------------------------------+
+|                                                                    |
+|    <code>$ wget "$url/kiss-chroot.tar.xz.asc"</code>                            |
+|                                                                    |
+|    <b># IMPORT PUBLIC KEY</b>                                             |
+|                                                                    |
+|    <code>$ gpg --keyserver keys.gnupg.net --recv-key 46D62DD9F1DE636E</code>    |
+|                                                                    |
+|    <b># VERIFY THE SIGNATURE</b>                                          |
+|                                                                    |
+|    <code>$ gpg --verify kiss-chroot.tar.xz.asc kiss-chroot.tar.xz</code>        |
+|                                                                    |
++--------------------------------------------------------------------+
+
+<h3>==========================
+DOWNLOAD THE CHROOT HELPER
+==========================</h3>
++--------------------------------------------------------------------+
+|                                                                    |
+|    <code>$ url=raw.githubusercontent.com/kisslinux/kiss/master/contrib</code>   |
+|    <code>$ wget "$url/kiss-chroot"</code>                                       |
+|                                                                    |
+|    <b># ENSURE THE SCRIPT IS EXECUTABLE</b>                               |
+|                                                                    |
+|    <code>$ chmod +x kiss-chroot</code>                                          |
+|                                                                    |
++--------------------------------------------------------------------+
+
+<h3>==================
+UNPACK THE TARBALL
+==================</h3>
++--------------------------------------------------------------------+
+|                                                                    |
+|    <code>$ tar xvf kiss-chroot.tar.xz -C /mnt --strip-components 1</code>       |
+|                                                                    |
++--------------------------------------------------------------------+
+
+<h3>==============
+Create a fstab
+==============</h3>
++--------------------------------------------------------------------+
+|                                                                    |
+|    <code>$ file=glacion/genfstab/releases/download/1.0/genfstab</code>          |
+|    <code>$ wget github.com/$file</code>                                         |
+|    <code>$ ./genfstab -U /mnt > /mnt/etc/fstab</code>                           |
+|                                                                    |
++--------------------------------------------------------------------+
+
+<h3>================
+ENTER THE CHROOT
+================</h3>
++--------------------------------------------------------------------+
+|                                                                    |
+|    <code>$ ./kiss-chroot /mnt</code>                                            |
+|                                                                    |
++--------------------------------------------------------------------+
+
+<h3>============
+REBUILD KISS
+============</h3>
++--------------------------------------------------------------------+
+|                                                                    |
+|    <code>$ export MAKEFLAGS="-j2"</code>                                        |
+|    <code>$ kiss update</code>                                                   |
+|    <code>$ cd /var/db/kiss/installed && kiss build *</code>                     |
+|                                                                    |
++--------------------------------------------------------------------+
+
+<h3>===========
+FILESYSTEMS
+===========</h3>
++--------------------------------------------------------------------+
+|                                                                    |
+|    <b># Ext2, Ext3 and Ext4</b>                                           |
+|                                                                    |
+|    <code>$ kiss b e2fsprogs</code>                                              |
+|    <code>$ kiss i e2fsprogs</code>                                              |
+|                                                                    |
+|    <b># fat, vfat and friends (Only needed for UEFI)</b>                  |
+|                                                                    |
+|    <code>$ kiss b dosfstools</code>                                             |
+|    <code>$ kiss i dosfstools</code>                                             |
+|                                                                    |
++--------------------------------------------------------------------+
+
+<h3>=================
+DEVICE MANAGEMENT
+=================</h3>
++--------------------------------------------------------------------+
+|                                                                    |
+|    <b># Needed blkid support in eudev</b>                                 |
+|                                                                    |
+|    <code>$ kiss b util-linux</code>                                             |
+|    <code>$ kiss i util-linux</code>                                             |
+|                                                                    |
+|    <code>$ kiss b eudev</code>                                                  |
+|    <code>$ kiss i eudev</code>                                                  |
+|                                                                    |
+|    <b># Wifi (optional)</b>                                               |
+|                                                                    |
+|    <code>$ kiss b wpa_supplicant</code>                                         |
+|    <code>$ kiss i wpa_supplicant</code>                                         |
+|                                                                    |
+|    <b># Dynamic Ip Addressing (optional)</b>                              |
+|                                                                    |
+|    <code>$ kiss b dhcpcd</code>                                                 |
+|    <code>$ kiss i dhcpcd</code>                                                 |
+|                                                                    |
++--------------------------------------------------------------------+
+
+<h3>==========
+THE KERNEL
+==========</h3>
++--------------------------------------------------------------------+
+|                                                                    |
+| * The Linux kernel is not managed by the package manager.          |
+|   The kernel is managed manually by the user.                      |
+|                                                                    |
+| * KISS does not support booting using an initramfs. When           |
+|   configuring your kernel ensure that all required                 |
+|   file-system, disk controller and USB drivers are built           |
+|   with [*] (Yes) and not [m] (Module).                             |
+|                                                                    |
+| * NOTE: A patch is required for all kernels when built with        |
+|         GCC 10.1.0. Please read the link below (and the            |
+|         patch itself for more information).                        |
+|                                                                    |
+|         https://k1ss.org/news/20200509a                            |
+|                                                                    |
+|                                                                    |
+|   <b># INSTALL REQUIRED PACKAGES</b>                                      |
+|                                                                    |
+|     * libelf is required in most if not all cases.                 |
+|                                                                    |
+|    <code>$ kiss b libelf</code>                                                 |
+|    <code>$ kiss i libelf</code>                                                 |
+|                                                                    |
+|     * ncurses is needed for 'make menuconfig' and can be           |
+|       skipped if you will not be using it.                         |
+|                                                                    |
+|    <code>$ kiss b ncurses</code>                                                |
+|    <code>$ kiss i ncurses</code>                                                |
+|                                                                    |
+|     * Perl is needed by the build_OID_registry script which will   |
+|       be executed during your kernel build 99.9% of the time.      |
+|       What this means is that perl is *required*.                  |
+|                                                                    |
+|    <code>$ kiss b perl</code>                                                   |
+|    <code>$ kiss i perl</code>                                                   |
+|                                                                    |
+|                                                                    |
+|    <b># DOWNLOAD THE KERNEL SOURCES</b>                                   |
+|     * https://kernel.org                                           |
+|     * https://www.fsfla.org/                                       |
+|                                                                    |
+|     * A larger list of kernels can be found on the                 |
+|       https://wiki.archlinux.org/index.php/Kernel                  |
+|                                                                    |
+|    <code>$ wget KERNEL_SOURCE_URL</code>                                        |
+|                                                                    |
+|                                                                    |
+|    <b># Extract the kernel sources</b>                                    |
+|                                                                    |
+|    <code>$ tar xvf KERNEL_SOURCE.tar.??</code>                                  |
+|    <code>$ cd linux-*</code>                                                    |
+|                                                                    |
+|                                                                    |
+|    <b># DOWNLOAD FIRMWARE BLOBS (if required)</b>                         |
+|                                                                    |
+|     * Sources: kernel.org                                          |
+|                                                                    |
+|    <code>$ wget FIRMWARE_TARBALL.tar.gz</code>                                  |
+|                                                                    |
+|                                                                    |
+|    <b># Extract the firmware.</b>                                         |
+|                                                                    |
+|    <code>$ tar xvf linux-firmware-20191022.tar.gz</code>                        |
+|                                                                    |
+|                                                                    |
+|    <b># Copy the required drivers to '/usr/lib/firmware'</b>              |
+|                                                                    |
+|    <code>$ mkdir -p /usr/lib/firmware</code>                                    |
+|    <code>$ cp -R ./path/to/driver /usr/lib/firmware</code>                      |
+|                                                                    |
+|                                                                    |
+|    <b># Configure The Kernel</b>                                          |
+|                                                                    |
+|     * Generate a default config with *most* drivers                |
+|       compiled as `[*]` (not modules).                             |
+|                                                                    |
+|    <code>$ make defconfig</code>                                                |
+|                                                                    |
+|     * Open an interactive menu to edit the generated               |
+|       config, enabling anything extra you may need.                |
+|                                                                    |
+|    <code>$ make menuconfig</code>                                               |
+|                                                                    |
+|     * Store the generated config for reuse later.                  |
+|                                                                    |
+|    <code>$ cp .config /path/to/somewhere</code>                                 |
+|                                                                    |
+|                                                                    |
+|    <b># BUILD THE KERNEL</b>                                              |
+|                                                                    |
+|     * This may take a while to complete. The compilation time      |
+|       depends on your hardware and kernel configuration.           |
+|     * '-j $(nproc)' does a parallel build using all cores.         |
+|                                                                    |
+|    <code>$ make -j "$(nproc)"</code>                                            |
+|                                                                    |
+|                                                                    |
+|    <b># INSTALL THE KERNEL</b>                                            |
+|                                                                    |
+|     * Ignore the LILO error, it's harmless.                        |
+|     * Install the built modules.                                   |
+|     * This installs directly to /lib (symlink to /usr/lib).        |
+|                                                                    |
+|    <code>$ make modules_install</code>                                          |
+|                                                                    |
+|                                                                    |
+|    <b># Install the built kernel</b>                                      |
+|     * This installs directly to /boot.                             |
+|                                                                    |
+|    <code>$ make install</code>                                                  |
+|                                                                    |
+|                                                                    |
+|    <b># Rename the kernel</b>                                             |
+|     * Substitute VERSION for the kernel version you have built.    |
+|     * Example: 'vmlinuz-5.4'                                       |
+|                                                                    |
+|    <code>$ mv /boot/vmlinuz /boot/vmlinuz-VERSION</code>                        |
+|    <code>$ mv /boot/System.map /boot/System.map-VERSION</code>                  |
+|                                                                    |
++--------------------------------------------------------------------+
+
+
+<h3>==============
+THE BOOTLOADER
+==============</h3>
++--------------------------------------------------------------------+
+|                                                                    |
+|    * The default bootloader is grub (*though nothing prevents      |
+|      you from using whatever bootloader you desire*).              |
+|    * This bootloader was chosen as most people are familiar        |
+|      with it, both BIOS and UEFI are supported and vast            |
+|      amounts of documentation for it exists                        |
+|                                                                    |
+|    <b># Build and install grub</b>                                        |
+|                                                                    |
+|    <code>$ kiss b grub</code>                                                   |
+|    <code>$ kiss i grub</code>                                                   |
+|                                                                    |
+|    <b># Required for UEFI</b>                                             |
+|                                                                    |
+|    <code>$ kiss b efibootmgr</code>                                             |
+|    <code>$ kiss i efibootmgr</code>                                             |
+|                                                                    |
+|    <b># Setup grub</b>                                                    |
+|     * BIOS                                                         |
+|                                                                    |
+|    <code>$ grub-install /dev/sdX</code>                                         |
+|                                                                    |
+|     * UEFI (replace 'esp' with the EFI mount point)                |
+|                                                                    |
+|    <code>$ grub-install --target=x86_64-efi \</code>                            |
+|                   <code>--efi-directory=esp \</code>                            |
+|                   <code>--bootloader-id=kiss</code>                             |
+|                                                                    |
+|    <b># Make grub-config</b>                                              |
+|                                                                    |
+|    <code>$ grub-mkconfig -o /boot/grub/grub.cfg</code>                          |
+|                                                                    |
++--------------------------------------------------------------------+
+
+<h3>====================
+INSTALL INIT SCRIPTS
+====================</h3>
++--------------------------------------------------------------------+
+|                                                                    |
+|    * The default init is busybox init (*though nothing ties        |
+|      you to it*). The below commands install the bootup and        |
+|      shutdown scripts as well as the default inittab config.       |
+|                                                                    |
+|    * Source code: https://github.com/kisslinux/kiss-init           |
+|                                                                    |
+|    <code>$ kiss b baseinit</code>                                               |
+|    <code>$ kiss i baseinit</code>                                               |
+|                                                                    |
++--------------------------------------------------------------------+
+
+<h3>===============================
+ADD A NORMAL USER (recommended)
+===============================</h3>
++--------------------------------------------------------------------+
+|                                                                    |
+|    <code>$ adduser USERNAME</code>                                              |
+|                                                                    |
+|    <b># Add user to relevant groups</b>                                   |
+|                                                                    |
+|    <code>$ addgroup USERNAME video</code>                                       |
+|    <code>$ addgroup USERNAME audio</code>                                       |
+|                                                                    |
++--------------------------------------------------------------------+
+
+<h3>==========================================
+ENABLE THE COMMUNITY AND myKISS REPOSITORY
+==========================================</h3>
++--------------------------------------------------------------------+
+|                                                                    |
+|                                                                    |
+|    * The KISS community repository is maintained by users of the   |
+|      distribution and contains packages which aren't in the main   |
+|      repositories. This repository is disabled by default.         |
+|                                                                    |
+|    * The myKiss repository is maintained by me (fl0-1337)          |
+|      I do note ensure that the packages are up to date             |
+|                                                                    |
+|    <b># Clone the repos</b>                                               |
+|                                                                    |
+|    <code>$ git clone https://github.com/kisslinux/community.git</code>          |
+|    <code>$ git clone https://github.com/fl0-1337/myKiss.git</code>              |
+|                                                                    |
+|    <b># Add repos to system-wide 'KISS_PATH'</b>                          |
+|     * NOTE: The subdirectory must be also added                    |
+|                                                                    |
+|    <code>$ vi /etc/profile.d/kiss_path.sh</code>                                |
+|                                                                    |
+|    <b># New login shell to access this repository immediately</b>         |
+|                                                                    |
+|    <code>$ sh -l</code>                                                         |
+|                                                                    |
++--------------------------------------------------------------------+
+
+<h3>=======================
+INSTALL XORG (optional)
+=======================</h3>
++--------------------------------------------------------------------+
+|                                                                    |
+|    <b># Install Xorg and the input drivers</b>                            |
+|                                                                    |
+|    <code>$ kiss b xorg-server xinit xf86-input-libinput</code>                  |
+|    <code>$ kiss i xorg-server xinit xf86-input-libinput</code>                  |
+|                                                                    |
+|    <b># Install a base font</b>                                           |
+|                                                                    |
+|    <code>$ kiss b liberation-fonts</code>                                       |
+|    <code>$ kiss i liberation-fonts</code>                                       |
+|                                                                    |
++--------------------------------------------------------------------+
+
+
+	</pre>
+</body>
+</html>
